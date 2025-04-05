@@ -33,7 +33,8 @@ namespace AIInterviewAssistant.WPF
         private WaveFileWriter? _micAudioWriter;
         private bool _inProgress;
         private bool _modelLoaded;
-
+private bool _isLeftAltPressed = false;
+private bool _isRightAltPressed = false;
         // Add these fields to MainWindow class
         private string _currentSolution = string.Empty;
         private string _currentExplanation = string.Empty;
@@ -59,7 +60,8 @@ namespace AIInterviewAssistant.WPF
             _recognizeService = new RecognizeService();
             _aiService = new GigaChatService();
             _screenshotService = new ScreenshotService();
-
+ _autoScreenshotTimer = new DispatcherTimer();
+    _autoScreenshotCancellation = new CancellationTokenSource();
             // Настройка глобальных хоткеев
             _globalHook = new TaskPoolGlobalHook();
             _globalHook.KeyPressed += OnKeyPressed;
@@ -94,7 +96,7 @@ namespace AIInterviewAssistant.WPF
             SendScreenshotButton.Content = "Отправить скриншот в AI";
         }
 
-        private void MainWindow_Closing(object sender, CancelEventArgs e)
+private void MainWindow_Closing(object? sender, CancelEventArgs e)
         {
             // Освободить все аудио ресурсы
             StopAndDisposeAudio();
@@ -177,62 +179,65 @@ namespace AIInterviewAssistant.WPF
             }
         }
 
-        private void OnKeyPressed(object sender, KeyboardHookEventArgs e)
+        private void OnKeyPressed(object? sender, KeyboardHookEventArgs e)
+{
+    // Track Alt key states
+    if (e.Data.KeyCode == KeyCode.VcLeftAlt)
+    {
+        _isLeftAltPressed = true;
+    }
+    else if (e.Data.KeyCode == KeyCode.VcRightAlt)
+    {
+        _isRightAltPressed = true;
+    }
+
+    // If PrtSc is pressed and not in cooldown period
+    if (e.Data.KeyCode == KeyCode.VcPrintScreen && _modelLoaded && !_inProgress)
+    {
+        // Check if we're within the cooldown period
+        if ((DateTime.Now - _lastScreenshotTime).TotalMilliseconds < _cooldownPeriodMs)
         {
-            // Keep existing code for F2 and PrtSc...
-
-            // If PrtSc is pressed and not in cooldown period
-            if (e.Data.KeyCode == KeyCode.VcPrintScreen && _modelLoaded && !_inProgress)
-            {
-                // Check if we're within the cooldown period
-                if ((DateTime.Now - _lastScreenshotTime).TotalMilliseconds < _cooldownPeriodMs)
-                {
-                    Debug.WriteLine("[DEBUG] Screenshot request ignored - cooldown period active");
-                    return;
-                }
-
-                _lastScreenshotTime = DateTime.Now;
-
-                Dispatcher.Invoke(async () =>
-                {
-                    await CaptureAndProcessScreenshotAsync();
-                });
-            }
-            // If Alt+1 is pressed, show solution
-            else if (
-                e.Data.KeyCode == KeyCode.Vc1
-                && (e.Data.RawEvent.Modifiers & ModifierMask.Alt) != 0
-            )
-            {
-                Dispatcher.Invoke(() =>
-                {
-                    ShowSolution();
-                });
-            }
-            // If Alt+2 is pressed, show explanation
-            else if (
-                e.Data.KeyCode == KeyCode.Vc2
-                && (e.Data.RawEvent.Modifiers & ModifierMask.Alt) != 0
-            )
-            {
-                Dispatcher.Invoke(() =>
-                {
-                    ShowExplanation();
-                });
-            }
-            // If Alt+3 is pressed, show alternative solution
-            else if (
-                e.Data.KeyCode == KeyCode.Vc3
-                && (e.Data.RawEvent.Modifiers & ModifierMask.Alt) != 0
-            )
-            {
-                Dispatcher.Invoke(() =>
-                {
-                    ShowAlternativeSolution();
-                });
-            }
+            Debug.WriteLine("[DEBUG] Screenshot request ignored - cooldown period active");
+            return;
         }
 
+        _lastScreenshotTime = DateTime.Now;
+
+        Dispatcher.Invoke(async () =>
+        {
+            await CaptureAndProcessScreenshotAsync();
+        });
+    }
+    // If Alt+1 is pressed, show solution
+    else if (e.Data.KeyCode == KeyCode.Vc1 && IsAltPressed())
+    {
+        Dispatcher.Invoke(() =>
+        {
+            ShowSolution();
+        });
+    }
+    // If Alt+2 is pressed, show explanation
+    else if (e.Data.KeyCode == KeyCode.Vc2 && IsAltPressed())
+    {
+        Dispatcher.Invoke(() =>
+        {
+            ShowExplanation();
+        });
+    }
+    // If Alt+3 is pressed, show alternative solution
+    else if (e.Data.KeyCode == KeyCode.Vc3 && IsAltPressed())
+    {
+        Dispatcher.Invoke(() =>
+        {
+            ShowAlternativeSolution();
+        });
+    }
+}
+private bool IsAltPressed()
+{
+    // Return the tracked state of Alt keys
+    return _isLeftAltPressed || _isRightAltPressed;
+}
         private async Task CaptureAndProcessScreenshotAsync()
         {
             try
@@ -423,17 +428,28 @@ namespace AIInterviewAssistant.WPF
             }
         }
 
-        private void OnKeyReleased(object sender, KeyboardHookEventArgs e)
+private void OnKeyReleased(object? sender, KeyboardHookEventArgs e)
+{
+    // Track Alt key releases
+    if (e.Data.KeyCode == KeyCode.VcLeftAlt)
+    {
+        _isLeftAltPressed = false;
+    }
+    else if (e.Data.KeyCode == KeyCode.VcRightAlt)
+    {
+        _isRightAltPressed = false;
+    }
+
+    // Если отпущена клавиша F2 и выполняется запись
+    if (e.Data.KeyCode == KeyCode.VcF2 && _inProgress)
+    {
+        Dispatcher.Invoke(() =>
         {
-            // Если отпущена клавиша F2 и выполняется запись
-            if (e.Data.KeyCode == KeyCode.VcF2 && _inProgress)
-            {
-                Dispatcher.Invoke(() =>
-                {
-                    StopRecording();
-                });
-            }
-        }
+            StopRecording();
+        });
+    }
+}
+
 
         private async void LoadButton_Click(object sender, RoutedEventArgs e)
         {

@@ -27,7 +27,10 @@ namespace AIInterviewAssistant.WPF
                 "I'm in a coding interview. This screenshot shows a programming problem. Please explain how to solve this problem step by step, including the reasoning and approach.";
             Properties["AlternativePromptTemplate"] =
                 "I'm in a coding interview. This screenshot shows a programming problem. Please provide an alternative solution or optimization approach to this problem. Focus on efficient implementation.";
-
+ // Настройки GigaChat API
+            Properties["GigaChatClientId"] = "c5285186-98c4-4da7-a5d8-fc58f4c2e1fc";
+            Properties["GigaChatClientSecret"] = "a01afe84-a40c-48d3-9ebb-9ad000343d1e";
+            Properties["GigaChatScope"] = "GIGACHAT_API_PERS";
             // Add helper window configuration
             Properties["DisplayHelperWindowOnHotkey"] = true;
             Properties["HelperWindowOpacity"] = 0.9;

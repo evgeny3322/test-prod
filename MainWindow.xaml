@@ -83,7 +83,7 @@
         <TextBox Grid.Row="0" x:Name="PositionTextBox" Margin="100,10,10,0" Text="Software Developer"/>
         
         <TextBlock Grid.Row="1" Text="Model Path:" Margin="10,10,0,0"/>
-        <TextBox Grid.Row="1" x:Name="ModelPathTextBox" Margin="100,10,10,0" Text="C:\vosk-model-small-en-us-0.15"/>
+        <TextBox Grid.Row="1" x:Name="ModelPathTextBox" Margin="100,10,10,0" Text="C:\Users\evgen\OneDrive\Рабочий стол\vosk-model-small-ru-0.22"/>
         
         <Button Grid.Row="2" x:Name="LoadButton" Content="Load Model" Margin="10" Click="LoadButton_Click"/>
         
