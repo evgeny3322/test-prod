@@ -19,7 +19,8 @@ using SharpHook.Native;
 // Use aliases to disambiguate
 using WpfApplication = System.Windows.Application;
 using WpfMessageBox = System.Windows.MessageBox;
-
+using WpfDragEventArgs = System.Windows.DragEventArgs; // Add this alias
+using WinFormsDragEventArgs = System.Windows.Forms.DragEventArgs; // Add this alias
 namespace AIInterviewAssistant.WPF
 {
     public partial class MainWindow : Window
@@ -180,7 +181,7 @@ private void MainWindow_Closing(object? sender, CancelEventArgs e)
                 Process.GetCurrentProcess().Kill();
             }
         }
-private void MainWindow_DragEnter(object sender, DragEventArgs e)
+private void MainWindow_DragEnter(object sender, WpfDragEventArgs e)
 {
     if (e.Data.GetDataPresent(DataFormats.FileDrop))
     {
@@ -197,7 +198,7 @@ private void MainWindow_DragEnter(object sender, DragEventArgs e)
     e.Handled = true;
 }
 
-private void MainWindow_Drop(object sender, DragEventArgs e)
+private void MainWindow_Drop(object sender, WpfDragEventArgs e)
 {
     if (e.Data.GetDataPresent(DataFormats.FileDrop))
     {
@@ -804,6 +805,88 @@ private void OnKeyReleased(object? sender, KeyboardHookEventArgs e)
                 SendManuallyButton.IsEnabled = true;
             }
         }
+
+        private void StartRecording()
+        {
+            if (_inProgress || !_modelLoaded)
+                return;
+
+            try
+            {
+                _inProgress = true;
+                StatusLabel.Content = "Recording...";
+
+                // Создаем временные WAV файлы для записи
+                string tempDir = Path.GetTempPath();
+                string micWavFile = Path.Combine(
+                    tempDir,
+                    $"mic_{DateTime.Now:yyyyMMdd_HHmmss}.wav"
+                );
+                string desktopWavFile = Path.Combine(
+                    tempDir,
+                    $"desktop_{DateTime.Now:yyyyMMdd_HHmmss}.wav"
+                );
+
+                // Настройка записи с микрофона
+                _micCapture = new WaveInEvent
+                {
+                    WaveFormat = new WaveFormat(16000, 1), // 16kHz, Mono - формат для Vosk
+                };
+
+                _micCapture.DataAvailable += (s, args) =>
+                {
+                    _micAudioWriter?.Write(args.Buffer, 0, args.BytesRecorded);
+                };
+
+                _micAudioWriter = new WaveFileWriter(micWavFile, _micCapture.WaveFormat);
+
+                // Настройка записи с рабочего стола (системные звуки)
+                _desktopCapture = new WasapiLoopbackCapture();
+                _desktopCapture.DataAvailable += (s, args) =>
+                {
+                    _desktopAudioWriter?.Write(args.Buffer, 0, args.BytesRecorded);
+                };
+
+                _desktopAudioWriter = new WaveFileWriter(
+                    desktopWavFile,
+                    _desktopCapture.WaveFormat
+                );
+
+                // Начинаем запись
+                _micCapture.StartRecording();
+                _desktopCapture.StartRecording();
+
+                // Установка таймера для автоматической остановки записи через заданный интервал
+                int maxSeconds = (int)(
+                    WpfApplication.Current.Properties["MaximumRecordLengthInSeconds"] ?? 20
+                );
+                Task.Delay(TimeSpan.FromSeconds(maxSeconds))
+                    .ContinueWith(_ =>
+                    {
+                        Dispatcher.Invoke(() =>
+                        {
+                            if (_inProgress)
+                            {
+                                StopRecording();
+                            }
+                        });
+                    });
+            }
+            catch (Exception ex)
+            {
+                _inProgress = false;
+                StatusLabel.Content = "Recording error";
+                WpfMessageBox.Show(
+                    $"Error starting recording: {ex.Message}",
+                    "Error",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Error
+                );
+            }yyyyMMdd_HHmmss}.wav"
+                );
+                string desktopWavFile = Path.Combine(
+                    tempDir,
+                    $"desktop_{DateTime.Now:
 
         private void StartRecording()
         {
