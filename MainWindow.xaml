@@ -26,7 +26,9 @@
         </Grid.RowDefinitions>
 
         <!-- Screenshot Hotkeys Configuration - Add after the existing UI elements -->
-        <GroupBox Grid.Row="10" Header="Screenshot Hotkeys" Margin="10">
+        <GroupBox Grid.Row="10"
+                Header="Screenshot Hotkeys"
+                Margin="10">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
@@ -40,19 +42,56 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
 
-                <Label Grid.Row="0" Grid.Column="0" Content="Capture Screenshot:" Margin="5"/>
-                <TextBox Grid.Row="0" Grid.Column="1" x:Name="CaptureHotkeyTextBox" Text="PrtSc" IsReadOnly="True" Margin="5"/>
-                
-                <Label Grid.Row="1" Grid.Column="0" Content="Show Solution:" Margin="5"/>
-                <TextBox Grid.Row="1" Grid.Column="1" x:Name="ShowSolutionHotkeyTextBox" Text="Alt+1" IsReadOnly="True" Margin="5"/>
-                
-                <Label Grid.Row="2" Grid.Column="0" Content="Show Explanation:" Margin="5"/>
-                <TextBox Grid.Row="2" Grid.Column="1" x:Name="ShowExplanationHotkeyTextBox" Text="Alt+2" IsReadOnly="True" Margin="5"/>
-                
-                <Label Grid.Row="3" Grid.Column="0" Content="Show Alternative:" Margin="5"/>
-                <TextBox Grid.Row="3" Grid.Column="1" x:Name="ShowAlternativeHotkeyTextBox" Text="Alt+3" IsReadOnly="True" Margin="5"/>
-                
-                <Button Grid.Row="0" Grid.Column="2" Content="Configure" x:Name="ConfigureHotkeysButton" Margin="5" Click="ConfigureHotkeysButton_Click"/>
+                <Label Grid.Row="0"
+                        Grid.Column="0"
+                        Content="Capture Screenshot:"
+                        Margin="5"/>
+                <TextBox Grid.Row="0"
+                        Grid.Column="1"
+                        x:Name="CaptureHotkeyTextBox"
+                        Text="PrtSc"
+                        IsReadOnly="True"
+                        Margin="5"/>
+
+                <Label Grid.Row="1"
+                        Grid.Column="0"
+                        Content="Show Solution:"
+                        Margin="5"/>
+                <TextBox Grid.Row="1"
+                        Grid.Column="1"
+                        x:Name="ShowSolutionHotkeyTextBox"
+                        Text="Alt+1"
+                        IsReadOnly="True"
+                        Margin="5"/>
+
+                <Label Grid.Row="2"
+                        Grid.Column="0"
+                        Content="Show Explanation:"
+                        Margin="5"/>
+                <TextBox Grid.Row="2"
+                        Grid.Column="1"
+                        x:Name="ShowExplanationHotkeyTextBox"
+                        Text="Alt+2"
+                        IsReadOnly="True"
+                        Margin="5"/>
+
+                <Label Grid.Row="3"
+                        Grid.Column="0"
+                        Content="Show Alternative:"
+                        Margin="5"/>
+                <TextBox Grid.Row="3"
+                        Grid.Column="1"
+                        x:Name="ShowAlternativeHotkeyTextBox"
+                        Text="Alt+3"
+                        IsReadOnly="True"
+                        Margin="5"/>
+
+                <Button Grid.Row="0"
+                        Grid.Column="2"
+                        Content="Configure"
+                        x:Name="ConfigureHotkeysButton"
+                        Margin="5"
+                        Click="ConfigureHotkeysButton_Click"/>
             </Grid>
         </GroupBox>
 
@@ -64,42 +103,95 @@
                 <ColumnDefinition Width="Auto"/>
             </Grid.ColumnDefinitions>
             <Label Grid.Column="0"
-                Content="Status:"
-                Margin="10,5,5,10"/>
+                   Content="Status:"
+                   Margin="10,5,5,10"/>
             <Label Grid.Column="1"
-                x:Name="StatusLabel"
-                Content=""
-                Margin="0,5,10,10"/>
+                   x:Name="StatusLabel"
+                   Content=""
+                   Margin="0,5,10,10"/>
             <ProgressBar Grid.Column="2"
-                        x:Name="OperationProgressBar"
-                        Width="100"
-                        Height="15"
-                        Margin="5,5,10,10"
-                        Visibility="Collapsed"/>
+                         x:Name="OperationProgressBar"
+                         Width="100"
+                         Height="15"
+                         Margin="5,5,10,10"
+                         Visibility="Collapsed"/>
         </Grid>
-        
+
         <!-- Add other UI elements for your application -->
-        <TextBlock Grid.Row="0" Text="Position:" Margin="10,10,0,0"/>
-        <TextBox Grid.Row="0" x:Name="PositionTextBox" Margin="100,10,10,0" Text="Software Developer"/>
-        
-        <TextBlock Grid.Row="1" Text="Model Path:" Margin="10,10,0,0"/>
-        <TextBox Grid.Row="1" x:Name="ModelPathTextBox" Margin="100,10,10,0" Text="C:\Users\evgen\OneDrive\Рабочий стол\vosk-model-small-ru-0.22"/>
-        
-        <Button Grid.Row="2" x:Name="LoadButton" Content="Load Model" Margin="10" Click="LoadButton_Click"/>
-        
-        <TextBlock Grid.Row="3" Text="Input:" Margin="10,10,0,0"/>
-        <TextBox Grid.Row="4" x:Name="InputTextBox" Height="100" Margin="10" AcceptsReturn="True" TextWrapping="Wrap"/>
-        
-        <Button Grid.Row="5" x:Name="SendManuallyButton" Content="Send" Margin="10" Click="SendManuallyButton_Click"/>
-        
-        <TextBlock Grid.Row="6" Text="Output:" Margin="10,10,0,0"/>
-        <TextBox Grid.Row="7" x:Name="OutputTextBox" Height="150" Margin="10" IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"/>
-        
-        <StackPanel Grid.Row="8" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10">
-            <Button x:Name="TakeScreenshotButton" Content="Take Screenshot" Margin="5" Click="TakeScreenshotButton_Click"/>
-            <Button x:Name="SendScreenshotButton" Content="Send Screenshot" Margin="5" Click="SendScreenshotButton_Click"/>
+        <TextBlock Grid.Row="0"
+                Text="Position:"
+                Margin="10,10,0,0"/>
+        <TextBox Grid.Row="0"
+                x:Name="PositionTextBox"
+                Margin="100,10,10,0"
+                Text="Software Developer"/>
+
+        <TextBlock Grid.Row="1"
+                Text="Model Path:"
+                Margin="10,10,0,0"/>
+        <TextBox Grid.Row="1"
+                x:Name="ModelPathTextBox"
+                Margin="100,10,10,0"
+                Text="C:\Users\evgen\OneDrive\Рабочий стол\vosk-model-small-ru-0.22"/>
+
+        <Button Grid.Row="2"
+                x:Name="LoadButton"
+                Content="Load Model"
+                Margin="10"
+                Click="LoadButton_Click"/>
+
+        <TextBlock Grid.Row="3"
+                Text="Input:"
+                Margin="10,10,0,0"/>
+        <TextBox Grid.Row="4"
+                x:Name="InputTextBox"
+                Height="100"
+                Margin="10"
+                AcceptsReturn="True"
+                TextWrapping="Wrap"/>
+
+        <Button Grid.Row="5"
+                x:Name="SendManuallyButton"
+                Content="Send"
+                Margin="10"
+                Click="SendManuallyButton_Click"/>
+
+        <TextBlock Grid.Row="6"
+                Text="Output:"
+                Margin="10,10,0,0"/>
+        <TextBox Grid.Row="7"
+                x:Name="OutputTextBox"
+                Height="150"
+                Margin="10"
+                IsReadOnly="True"
+                TextWrapping="Wrap"
+                VerticalScrollBarVisibility="Auto"/>
+
+        <StackPanel Grid.Row="9"
+                Orientation="Horizontal"
+                HorizontalAlignment="Center"
+                Margin="10">
+            <Button x:Name="BrowseImageButton"
+                    Content="Выбрать изображение"
+                    Margin="5"
+                    Click="BrowseImageButton_Click"/>
+            <TextBlock x:Name="SelectedImagePathText"
+                    VerticalAlignment="Center"
+                    Text="Файл не выбран"
+                    Margin="5"
+                    MaxWidth="200"
+                    TextTrimming="CharacterEllipsis"/>
+            <Button x:Name="SendImageButton"
+                    Content="Отправить изображение"
+                    Margin="5"
+                    Click="SendImageButton_Click"
+                    IsEnabled="False"/>
         </StackPanel>
-        
-        <Button Grid.Row="9" x:Name="RunDiagnosticsButton" Content="Run Diagnostics" Margin="10" Click="RunDiagnosticsButton_Click"/>
+
+        <Button Grid.Row="9"
+                x:Name="RunDiagnosticsButton"
+                Content="Run Diagnostics"
+                Margin="10"
+                Click="RunDiagnosticsButton_Click"/>
     </Grid>
 </Window>

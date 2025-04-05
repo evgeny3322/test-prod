@@ -55,7 +55,9 @@ private bool _isRightAltPressed = false;
         public MainWindow()
         {
             InitializeComponent();
-
+this.AllowDrop = true;
+this.Drop += MainWindow_Drop;
+this.DragEnter += MainWindow_DragEnter;
             // Инициализация сервисов
             _recognizeService = new RecognizeService();
             _aiService = new GigaChatService();
@@ -178,7 +180,55 @@ private void MainWindow_Closing(object? sender, CancelEventArgs e)
                 Process.GetCurrentProcess().Kill();
             }
         }
+private void MainWindow_DragEnter(object sender, DragEventArgs e)
+{
+    if (e.Data.GetDataPresent(DataFormats.FileDrop))
+    {
+        string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+        if (files.Length > 0)
+        {
+            string extension = Path.GetExtension(files[0]).ToLowerInvariant();
+            if (new[] { ".jpg", ".jpeg", ".png", ".bmp", ".gif" }.Contains(extension))
+            {
+                e.Effects = DragDropEffects.Copy;
+            }
+        }
+    }
+    e.Handled = true;
+}
 
+private void MainWindow_Drop(object sender, DragEventArgs e)
+{
+    if (e.Data.GetDataPresent(DataFormats.FileDrop))
+    {
+        string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
+        if (files.Length > 0)
+        {
+            string filePath = files[0];
+            string extension = Path.GetExtension(filePath).ToLowerInvariant();
+            
+            if (new[] { ".jpg", ".jpeg", ".png", ".bmp", ".gif" }.Contains(extension))
+            {
+                _selectedImagePath = filePath;
+                SelectedImagePathText.Text = Path.GetFileName(_selectedImagePath);
+                SendImageButton.IsEnabled = true;
+                StatusLabel.Content = "Изображение загружено методом Drag & Drop";
+                
+                Debug.WriteLine($"[DEBUG] Изображение загружено через Drag & Drop: {_selectedImagePath}");
+            }
+            else
+            {
+                StatusLabel.Content = "Неподдерживаемый формат файла";
+                WpfMessageBox.Show(
+                    "Перетащенный файл имеет неподдерживаемый формат. Пожалуйста, используйте JPG, PNG, BMP или GIF.",
+                    "Неподдерживаемый формат",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning
+                );
+            }
+        }
+    }
+}
         private void OnKeyPressed(object? sender, KeyboardHookEventArgs e)
 {
     // Track Alt key states
@@ -363,7 +413,173 @@ private bool IsAltPressed()
             );
             StatusLabel.Content = "Showing solution (Alt+2 for explanation)";
         }
+// Добавьте это поле в класс MainWindow
+private string _selectedImagePath = string.Empty;
 
+// Добавьте эти методы в класс MainWindow
+private void BrowseImageButton_Click(object sender, RoutedEventArgs e)
+{
+    try
+    {
+        // Создаем диалог выбора файла
+        Microsoft.Win32.OpenFileDialog openFileDialog = new Microsoft.Win32.OpenFileDialog
+        {
+            Title = "Выберите изображение",
+            Filter = "Изображения|*.jpg;*.jpeg;*.png;*.bmp;*.gif|Все файлы|*.*",
+            CheckFileExists = true
+        };
+
+        // Показываем диалог и получаем результат
+        if (openFileDialog.ShowDialog() == true)
+        {
+            string selectedPath = openFileDialog.FileName;
+            
+            // Показываем окно предпросмотра
+            var previewWindow = new ImagePreviewWindow(selectedPath);
+            previewWindow.Owner = this;
+            previewWindow.ShowDialog();
+            
+            // Если пользователь нажал "Отправить"
+            if (previewWindow.SendRequested)
+            {
+                _selectedImagePath = selectedPath;
+                
+                // Обновляем UI
+                SelectedImagePathText.Text = Path.GetFileName(_selectedImagePath);
+                SendImageButton.IsEnabled = true;
+                StatusLabel.Content = "Изображение выбрано";
+                
+                // Автоматически запускаем отправку
+                SendImageButton_Click(sender, e);
+            }
+        }
+    }
+    catch (Exception ex)
+    {
+        Debug.WriteLine($"[ERROR] Ошибка при выборе файла: {ex.Message}");
+        StatusLabel.Content = "Ошибка выбора файла";
+        WpfMessageBox.Show(
+            $"Ошибка при выборе файла: {ex.Message}",
+            "Ошибка",
+            MessageBoxButton.OK,
+            MessageBoxImage.Error
+        );
+    }
+}
+
+private async void SendImageButton_Click(object sender, RoutedEventArgs e)
+{
+    if (string.IsNullOrEmpty(_selectedImagePath) || !File.Exists(_selectedImagePath))
+    {
+        StatusLabel.Content = "Файл не выбран или не существует";
+        return;
+    }
+
+    try
+    {
+        // Проверяем файл на размер и формат
+        FileInfo fileInfo = new FileInfo(_selectedImagePath);
+        Debug.WriteLine($"[DEBUG] Отправка изображения: {_selectedImagePath}, размер: {fileInfo.Length / 1024} KB");
+        
+        // Проверка размера файла (10 МБ макс)
+        if (fileInfo.Length > 10 * 1024 * 1024)
+        {
+            StatusLabel.Content = "Файл слишком большой";
+            WpfMessageBox.Show(
+                "Размер файла превышает 10 МБ. Пожалуйста, выберите файл меньшего размера или сожмите его.",
+                "Файл слишком большой",
+                MessageBoxButton.OK, 
+                MessageBoxImage.Warning
+            );
+            return;
+        }
+
+        // Проверка формата файла
+        string extension = Path.GetExtension(_selectedImagePath).ToLowerInvariant();
+        if (!new[] { ".jpg", ".jpeg", ".png", ".bmp", ".gif" }.Contains(extension))
+        {
+            StatusLabel.Content = "Неподдерживаемый формат";
+            WpfMessageBox.Show(
+                "Выбран неподдерживаемый формат файла. Пожалуйста, выберите JPG, PNG, BMP или GIF.",
+                "Неподдерживаемый формат",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning
+            );
+            return;
+        }
+
+        // Отключаем кнопки на время обработки
+        BrowseImageButton.IsEnabled = false;
+        SendImageButton.IsEnabled = false;
+        StatusLabel.Content = "Отправка изображения...";
+        OperationProgressBar.Visibility = Visibility.Visible;
+
+        // Отправляем изображение в AI
+        string question = string.IsNullOrWhiteSpace(InputTextBox.Text)
+            ? "Что изображено на этом фото? Опиши подробно."
+            : InputTextBox.Text;
+
+        // Копируем файл во временную директорию для обработки
+        string tempImagePath = CopyImageToTempDirectory(_selectedImagePath);
+        
+        // Отправляем изображение и получаем ответ от AI
+        string aiResponse = await _aiService.SendScreenshotDirectlyAsync(tempImagePath, question);
+
+        // Обновляем UI с результатом
+        OutputTextBox.Text = aiResponse;
+        StatusLabel.Content = "Ответ получен";
+        OperationProgressBar.Visibility = Visibility.Collapsed;
+    }
+    catch (Exception ex)
+    {
+        Debug.WriteLine($"[ERROR] Ошибка при отправке изображения: {ex.Message}");
+        Debug.WriteLine($"[ERROR] Stack trace: {ex.StackTrace}");
+        StatusLabel.Content = "Ошибка отправки";
+        OperationProgressBar.Visibility = Visibility.Collapsed;
+        WpfMessageBox.Show(
+            $"Ошибка при отправке изображения: {ex.Message}",
+            "Ошибка",
+            MessageBoxButton.OK,
+            MessageBoxImage.Error
+        );
+    }
+    finally
+    {
+        // Восстанавливаем состояние кнопок
+        BrowseImageButton.IsEnabled = true;
+        SendImageButton.IsEnabled = !string.IsNullOrEmpty(_selectedImagePath) && File.Exists(_selectedImagePath);
+    }
+}
+
+// Вспомогательный метод для копирования изображения во временную директорию
+private string CopyImageToTempDirectory(string sourcePath)
+{
+    try
+    {
+        // Создаем временную директорию, если она не существует
+        string tempDir = Path.Combine(Path.GetTempPath(), "AIInterviewAssistant");
+        if (!Directory.Exists(tempDir))
+        {
+            Directory.CreateDirectory(tempDir);
+        }
+
+        // Создаем имя для копии файла
+        string fileName = $"image_{DateTime.Now:yyyyMMdd_HHmmss}{Path.GetExtension(sourcePath)}";
+        string destPath = Path.Combine(tempDir, fileName);
+
+        // Копируем файл
+        File.Copy(sourcePath, destPath, true);
+        Debug.WriteLine($"[DEBUG] Изображение скопировано во временную директорию: {destPath}");
+
+        return destPath;
+    }
+    catch (Exception ex)
+    {
+        Debug.WriteLine($"[ERROR] Ошибка при копировании изображения: {ex.Message}");
+        // В случае ошибки, возвращаем исходный путь
+        return sourcePath;
+    }
+}
         private void ShowExplanation()
         {
             if (string.IsNullOrEmpty(_currentExplanation))
